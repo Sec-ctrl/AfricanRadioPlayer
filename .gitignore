@@ -1,0 +1,6 @@
+# Build and distribution directories
+build/
+dist/
+
+# spec file
+SmoothAfricanRadioPlayer.spec
