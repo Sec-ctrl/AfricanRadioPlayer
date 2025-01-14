@@ -9,3 +9,5 @@ if __name__ == "__main__":
     radio_player = RadioPlayer()
     radio_player.show()
     sys.exit(app.exec())
+
+# pyinstaller --onefile --windowed --add-data "assets;assets" --name "SmoothAfricanRadioPlayer" main.py --specpath . --icon=assets/icon.ico

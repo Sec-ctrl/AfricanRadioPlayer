@@ -1,12 +1,19 @@
-# radio_player.py
 import random
 import vlc
 
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QFont, QColor
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QListWidget, QLineEdit, QComboBox, QSlider, QMessageBox,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QListWidget,
+    QLineEdit,
+    QComboBox,
+    QSlider,
+    QMessageBox,
     QGraphicsDropShadowEffect
 )
 
@@ -31,6 +38,7 @@ class RadioPlayer(QWidget):
 
         # Keep track of the last station played
         self.current_station_url = ""
+        self.current_station_item = None
 
         # Build the UI
         self.init_ui()
@@ -38,7 +46,7 @@ class RadioPlayer(QWidget):
         # A variable to hold the station data
         self.all_stations = []
 
-        # Fetch initial country’s stations (optional, set a default)
+        # Fetch initial country’s stations (optional default)
         self.load_country_stations("Nigeria")
 
         # For window dragging
@@ -80,6 +88,7 @@ class RadioPlayer(QWidget):
 
         # Country combo box
         self.country_combo = QComboBox()
+        self.country_combo.setToolTip("Select an African country")
         self.country_combo.addItems(AFRICAN_COUNTRIES)
         self.country_combo.currentIndexChanged.connect(self.on_country_changed)
         station_layout.addWidget(self.country_combo)
@@ -87,11 +96,13 @@ class RadioPlayer(QWidget):
         # Search bar
         self.search_bar = QLineEdit()
         self.search_bar.setPlaceholderText("Search station...")
+        self.search_bar.setToolTip("Type to filter stations by name")
         self.search_bar.textChanged.connect(self.on_search_text_changed)
         station_layout.addWidget(self.search_bar)
 
         # Random station button
         self.random_button = QPushButton("Random Station")
+        self.random_button.setToolTip("Play a random station from the list")
         self.random_button.clicked.connect(self.play_random_station)
         station_layout.addWidget(self.random_button)
 
@@ -99,6 +110,7 @@ class RadioPlayer(QWidget):
 
         # List of stations
         self.station_list = QListWidget()
+        self.station_list.setToolTip("Double-click to play a station")
         self.station_list.itemDoubleClicked.connect(self.on_station_double_clicked)
         self.container_layout.addWidget(self.station_list)
 
@@ -106,10 +118,12 @@ class RadioPlayer(QWidget):
         controls_layout = QHBoxLayout()
 
         self.play_button = QPushButton("Play")
+        self.play_button.setToolTip("Play the selected station")
         self.play_button.clicked.connect(self.play_selected_station)
         controls_layout.addWidget(self.play_button)
 
         self.stop_button = QPushButton("Stop")
+        self.stop_button.setToolTip("Stop the currently playing station")
         self.stop_button.clicked.connect(self.stop_station)
         controls_layout.addWidget(self.stop_button)
 
@@ -128,6 +142,12 @@ class RadioPlayer(QWidget):
 
         controls_layout.addLayout(volume_layout)
         self.container_layout.addLayout(controls_layout)
+
+        # "Now playing" label
+        self.now_playing_label = QLabel("Now playing: Nothing")
+        self.now_playing_label.setObjectName("NowPlayingLabel")
+        self.now_playing_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.container_layout.addWidget(self.now_playing_label)
 
         # Apply styling
         self.apply_styles()
@@ -174,8 +194,7 @@ class RadioPlayer(QWidget):
 
     def apply_styles(self):
         """
-        Apply the stylesheet to get a smooth, modern look, using
-        inline SVG icons with forward slashes and removing transitions.
+        Apply the stylesheet to get a smooth, modern look.
         """
         self.setStyleSheet("""
             /* Container with gradient background and rounded corners */
@@ -222,7 +241,7 @@ class RadioPlayer(QWidget):
             #CloseButton {
                 background: url(assets/close_icon.svg) no-repeat center center;
                 background-color: transparent;
-                border: 2px solid red;  /* Temporary border for debugging */
+                border: none;
                 width: 32px;
                 height: 32px;
             }
@@ -266,6 +285,9 @@ class RadioPlayer(QWidget):
                 border: 1px solid #4C566A;
                 border-radius: 10px;
             }
+            QListWidget::item:selected {
+                background-color: #5E81AC;
+            }
 
             /* Labels, e.g. "Volume" */
             QLabel {
@@ -287,56 +309,105 @@ class RadioPlayer(QWidget):
             QSlider::handle:horizontal:hover {
                 background: #81A1C1;
             }
+            /* Now Playing Label */
+            #NowPlayingLabel {
+                font-size: 10pt;
+                color: #A3BE8C;
+                background-color: rgba(255,255,255,0.1);
+                border: 1px solid #4C566A;
+                border-radius: 8px;
+                padding: 8px;
+            }
         """)
 
     # Window dragging events
     def mousePressEvent(self, event):
-        # Limit dragging to top ~60px (title bar area) to avoid confusion
+        """Enable window dragging from the custom title bar area."""
         if event.button() == Qt.MouseButton.LeftButton and event.pos().y() < 60:
             self.old_pos = event.globalPosition().toPoint()
 
     def mouseMoveEvent(self, event):
+        """Handle the movement during dragging."""
         if self.old_pos is not None:
             delta = event.globalPosition().toPoint() - self.old_pos
             self.move(self.x() + delta.x(), self.y() + delta.y())
             self.old_pos = event.globalPosition().toPoint()
 
     def mouseReleaseEvent(self, event):
+        """Reset the drag position upon release."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.old_pos = None
 
+    # Optionally, prompt user on close:
+    # def closeEvent(self, event):
+    #     reply = QMessageBox.question(
+    #         self,
+    #         'Confirm Exit',
+    #         "Are you sure you want to quit?",
+    #         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+    #         QMessageBox.StandardButton.No
+    #     )
+    #     if reply == QMessageBox.StandardButton.Yes:
+    #         event.accept()
+    #     else:
+    #         event.ignore()
+
     # Event handlers
     def on_country_changed(self):
+        """When user changes country, load new stations."""
         selected_country = self.country_combo.currentText()
         self.load_country_stations(selected_country)
 
     def load_country_stations(self, country):
+        """Fetch and list stations for the selected country."""
         self.station_list.clear()
         self.all_stations = fetch_stations_by_country(country)
+
+        if not self.all_stations:
+            # If no stations were returned, let the user know
+            self.station_list.addItem("[No stations found]")
+            return
+
         for station in self.all_stations:
             name = station.get("name", "Unknown Station")
             self.station_list.addItem(name)
 
     def on_search_text_changed(self, text):
+        """Filter stations by the search text."""
         self.station_list.clear()
         filtered = [
             st for st in self.all_stations
             if text.lower() in st.get("name", "").lower()
         ]
+
+        if not filtered:
+            self.station_list.addItem("[No results found]")
+            return
+
         for station in filtered:
             name = station.get("name", "Unknown Station")
             self.station_list.addItem(name)
 
     def on_station_double_clicked(self, item):
+        """Play station upon double-click."""
+        # Prevent trying to play "No results found"
+        if "[No" in item.text():
+            return
         self.play_selected_station()
 
     def play_selected_station(self):
+        """Plays the station that is currently selected in the list."""
         selected_items = self.station_list.selectedItems()
         if not selected_items:
             QMessageBox.warning(self, "No selection", "Please select a station.")
             return
 
         selected_station_name = selected_items[0].text()
+
+        # Prevent trying to play "No results found"
+        if "[No" in selected_station_name:
+            return
+
         station_data = next(
             (s for s in self.all_stations if s.get("name") == selected_station_name),
             None
@@ -347,6 +418,8 @@ class RadioPlayer(QWidget):
             if stream_url:
                 self.current_station_url = stream_url
                 self.start_playback(stream_url, station_data.get("name", "Unknown"))
+                # Highlight the playing station
+                self.highlight_playing_station(selected_items[0])
             else:
                 QMessageBox.warning(
                     self,
@@ -355,15 +428,23 @@ class RadioPlayer(QWidget):
                 )
 
     def stop_station(self):
+        """Stops the station currently playing."""
         self.player.stop()
+        self.now_playing_label.setText("Now playing: Nothing")
+        self.unhighlight_previous_station()
 
     def start_playback(self, stream_url, station_name=""):
+        """Set up and play media in VLC."""
         print(f"Now playing: {station_name} - {stream_url}")
         media = vlc.Media(stream_url)
         self.player.set_media(media)
         self.player.play()
 
+        # Update the "Now playing" label
+        self.now_playing_label.setText(f"Now playing: {station_name}")
+
     def play_random_station(self):
+        """Pick and play a random station from the list."""
         if not self.all_stations:
             QMessageBox.information(self, "No Stations", "No stations available.")
             return
@@ -379,5 +460,29 @@ class RadioPlayer(QWidget):
         self.current_station_url = stream_url
         self.start_playback(stream_url, name)
 
+        # Select and highlight the random station in the list
+        items = self.station_list.findItems(name, Qt.MatchFlag.MatchExactly)
+        if items:
+            self.highlight_playing_station(items[0])
+            self.station_list.setCurrentItem(items[0])
+
     def set_volume(self, value):
+        """Adjust VLC volume."""
         self.player.audio_set_volume(value)
+
+    # ---- Utility / UX functions ----
+    def highlight_playing_station(self, item):
+        """Highlight the currently playing station in the list."""
+        self.unhighlight_previous_station()
+        self.current_station_item = item
+        font = item.font()
+        font.setBold(True)
+        item.setFont(font)
+
+    def unhighlight_previous_station(self):
+        """Remove bold highlight from the previously playing station."""
+        if self.current_station_item is not None:
+            font = self.current_station_item.font()
+            font.setBold(False)
+            self.current_station_item.setFont(font)
+            self.current_station_item = None
