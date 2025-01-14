@@ -1,13 +1,12 @@
-# main.py
-
 import sys
 from PyQt6.QtWidgets import QApplication
-from radio_player import RadioPlayer
+from radio_window import RadioWindow
 
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
-    radio_player = RadioPlayer()
-    radio_player.show()
+    window = RadioWindow()
+    window.show()
     sys.exit(app.exec())
 
-# pyinstaller --onefile --windowed --add-data "assets;assets" --name "SmoothAfricanRadioPlayer" main.py --specpath . --icon=assets/icon.ico
+if __name__ == "__main__":
+    main()
