@@ -22,6 +22,9 @@ from api import FetchStationsWorker  # If you have a worker thread class here
 from constants import AFRICAN_COUNTRIES
 from styles import LOAD_STYLESHEET  # We'll define LOAD_STYLESHEET in styles.py
 
+import os
+import sys
+
 class RadioWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -43,6 +46,11 @@ class RadioWindow(QWidget):
 
         # (Optional) Fetch initial country's stations at startup
         self.load_country_stations("Nigeria")
+    
+    def resource_path(relative_path):
+        """ Get the absolute path to the resource, works for dev and PyInstaller """
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_path, relative_path)
 
     def init_ui(self):
         """
@@ -138,7 +146,8 @@ class RadioWindow(QWidget):
         self.spinner_label.setScaledContents(True)
 
         # Load the spinner GIF (place spinner.gif in your assets folder)
-        spinner_movie = QMovie("assets/spinner.gif")
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        spinner_movie = QMovie(base_path + "/assets/spinner.gif")
         self.spinner_label.setMovie(spinner_movie)
         spinner_movie.start()
 

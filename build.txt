@@ -1,0 +1,1 @@
+pyinstaller --windowed --onefile --add-data "assets;assets" --name "SmoothAfricanRadioPlayer" main.py --clean --noconsole --specpath . --ico=assets/icon.ico --version-file version_info.txt 
