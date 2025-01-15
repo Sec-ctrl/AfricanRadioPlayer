@@ -4,3 +4,13 @@ dist/
 
 # spec file
 SmoothAfricanRadioPlayer.spec
+SmoothAfricanRadioPlayer.pfx
+
+#Tests
+tests/*
+tests/
+
+# Cache files
+.vscode/
+.pytest_cache/
+__pycache__/
