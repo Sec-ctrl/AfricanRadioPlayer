@@ -18,7 +18,7 @@ class TitleBar(QWidget):
 
     def init_ui(self):
         self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setContentsMargins(20, 0, 0, 0)
         self.setLayout(self.layout)
 
         # Title label

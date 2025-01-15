@@ -11,23 +11,33 @@ def LOAD_STYLESHEET():
     minimize_icon_path = os.path.join(assets_path, "minimize_icon.svg").replace("\\", "/")
     close_icon_path = os.path.join(assets_path, "close_icon.svg").replace("\\", "/")
     return f"""
-            /* Container with gradient background and rounded corners */
-            #Container {{
-                border-radius: 16px;
+            /* Main window container */
+            QWidget {{
                 background: qlineargradient(
-                    spread:pad, 
-                    x1:0, y1:0, x2:1, y2:1, 
-                    stop:0 rgba(52, 59, 69, 1), 
-                    stop:1 rgba(58, 69, 85, 1)
+                    spread: pad,
+                    x1: 0, y1: 0, x2: 1, y2: 1,
+                    stop: 1 rgba(45, 52, 61, 1),
+                    stop: 0 rgba(50, 60, 75, 1)
                 );
-            }}
-
-            /* Title label at the top */
-            #TitleLabel {{
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 10pt;
                 color: #ECEFF4;
             }}
 
-            /* Basic push buttons */
+            /* Container */
+            #Container {{
+                border-radius: 20px;
+                background: transparent;
+            }}
+
+            /* Title label */
+            #TitleLabel {{
+                color: #ECEFF4;
+                font-size: 12pt;
+                font-weight: bold;
+            }}
+
+            /* Buttons */
             QPushButton {{
                 background-color: #4C566A;
                 color: #ECEFF4;
@@ -36,38 +46,45 @@ def LOAD_STYLESHEET():
                 padding: 8px 16px;
                 font-size: 10pt;
             }}
-            /* Hover effect */
             QPushButton:hover {{
                 background-color: #5E81AC;
             }}
 
-            /* Minimize and close button icons */
-            #MinButton {{
-                background-image: url("{minimize_icon_path}");
+            /* Toggle button */
+            QToolButton#ToggleButton {{
+                background: transparent;
+                border: none;
+                padding: 0;
+            }}
+            QToolButton#ToggleButton:hover {{
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+            }}
+
+            /* Minimize and close buttons */
+            #MinButton, #CloseButton {{
                 background-repeat: no-repeat;
                 background-position: center;
                 background-color: transparent;
                 border: none;
-                width: 32px;
-                height: 32px;
+                width: 16px;
+                height: 16px;
+            }}
+            #MinButton {{
+                background-image: url("{minimize_icon_path}");
+            }}
+            #CloseButton {{
+                background-image: url("{close_icon_path}");
             }}
             #MinButton:hover {{
                 background-color: rgba(255, 255, 255, 0.1);
             }}
-            #CloseButton {{
-                background-image: url("{close_icon_path}");
-                background-repeat: no-repeat;
-                background-position: center;
-                background-color: transparent;
-                border: none;
-                width: 32px;
-                height: 32px;
-            }}
             #CloseButton:hover {{
                 background-color: rgba(255, 0, 0, 0.3);
+                border-radius: 8px;
             }}
 
-            /* QLineEdit (search bar) */
+            /* Search bar */
             QLineEdit {{
                 background-color: rgba(255,255,255,0.1);
                 color: #ECEFF4;
@@ -79,7 +96,7 @@ def LOAD_STYLESHEET():
                 border: 1px solid #88C0D0;
             }}
 
-            /* QComboBox */
+            /* Combo box */
             QComboBox {{
                 background-color: rgba(255,255,255,0.1);
                 color: #ECEFF4;
@@ -96,23 +113,25 @@ def LOAD_STYLESHEET():
                 border-radius: 4px;
             }}
 
-            /* QListWidget */
+           /* List widget */
             QListWidget {{
-                background-color: rgba(255,255,255,0.06);
-                color: #ECEFF4;
                 border: 1px solid #4C566A;
                 border-radius: 10px;
-            }}
-            QListWidget::item:selected {{
-                background-color: #5E81AC;
+                padding: 8px;
             }}
 
-            /* Labels, e.g. "Volume" */
+            QListWidget::item:selected {{
+                background-color: rgba(88, 192, 208, 0.5); /* Light transparent highlight */
+                color: #ECEFF4; /* Ensure selected text remains visible */
+            }}
+
+            /* Labels */
             QLabel {{
                 color: #ECEFF4;
+                font-size: 10pt;
             }}
 
-            /* Volume slider */
+            /* Slider */
             QSlider::groove:horizontal {{
                 background: #434C5E;
                 height: 6px;
@@ -127,7 +146,8 @@ def LOAD_STYLESHEET():
             QSlider::handle:horizontal:hover {{
                 background: #81A1C1;
             }}
-            /* Now Playing Label */
+
+            /* Now Playing label */
             #NowPlayingLabel {{
                 font-size: 10pt;
                 color: #A3BE8C;
