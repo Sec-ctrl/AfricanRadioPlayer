@@ -14,3 +14,7 @@ tests/
 .vscode/
 .pytest_cache/
 __pycache__/
+
+#certs and keys
+SmoothAfricanRadioPlayer.pfx
+SmoothAfricanRadioPlayer.cer

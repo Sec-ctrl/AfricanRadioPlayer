@@ -14,10 +14,17 @@ class FetchStationsWorker(QThread):
     def __init__(self, country):
         super().__init__()
         self.country = country
+        self._is_running = True
 
     def run(self):
-        stations = fetch_stations_by_country(self.country)
-        self.finished.emit(stations)
+        if self._is_running:
+            stations = fetch_stations_by_country(self.country)
+            if self._is_running:  # Check again before emitting
+                self.finished.emit(stations)
+
+    def stop(self):
+        """Stop the thread."""
+        self._is_running = False
 
 def fetch_stations_by_country(country):
     """

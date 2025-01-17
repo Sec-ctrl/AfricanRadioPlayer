@@ -31,6 +31,7 @@ import sys
 class RadioWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.fetch_stations_worker = None  # Keep track of the current worker thread
         self.setWindowTitle("Smooth African Radio Player")
 
         # We want a frameless window with rounded corners
@@ -264,10 +265,14 @@ class RadioWindow(QWidget):
 
     def toggle_favorite(self, station_name):
         """Toggle the favorite status of a station."""
+        # Find the country of the current station
+        selected_country = self.country_combo.currentText()
+        
         if self.favorites_widget.is_favorite(station_name):
             self.favorites_widget.remove_favorite(station_name)
         else:
-            self.favorites_widget.add_favorite(station_name)
+            # Store both station name and country
+            self.favorites_widget.add_favorite({"name": station_name, "country": selected_country})
 
         # Update the star icon in the station list
         self.update_station_star_icon(station_name)
@@ -295,27 +300,46 @@ class RadioWindow(QWidget):
     
     def play_favorite_station(self, station_name):
         """Play a station selected from the Favorites list."""
-        # Unhighlight any station in the Main Station List
-        self.unhighlight_previous_station()
+        # Get the favorite's data (name and country)
+        favorite_data = self.favorites_widget.get_favorite_data(station_name)
+        if not favorite_data:
+            QMessageBox.warning(self, "Favorite Not Found", f"The favorite '{station_name}' is no longer available.")
+            return
 
+        favorite_country = favorite_data.get("country")
+        if not favorite_country:
+            QMessageBox.warning(self, "Invalid Data", f"The favorite '{station_name}' does not have a valid country.")
+            return
+
+        # Check if the current country matches the favorite's country
+        if self.country_combo.currentText() != favorite_country:
+            self.country_combo.setCurrentText(favorite_country)  # Switch to the correct country
+            self.load_country_stations(favorite_country)  # Load stations for the selected country
+
+            # Wait for the stations to load and play the favorite
+            QTimer.singleShot(1000, lambda: self._play_favorite_after_switch(favorite_data))
+        else:
+            # Country matches, play directly
+            self._play_favorite(favorite_data)
+        
+    def _play_favorite_after_switch(self, favorite_data):
+        """Play the favorite after switching to the correct country."""
+        station_name = favorite_data["name"]
         station_data = next((s for s in self.all_stations if s.get("name") == station_name), None)
 
-        if station_data:
-            url = station_data.get("url")
-            if url:
-                self.show_spinner()
-                self.radio_player.play_station(url)
-                self.now_playing_label.setText(f"Now playing: {station_name}")
-
-                # Highlight the selected favorite
-                self.highlight_favorite(station_name)
-
-                self.wait_for_playing()
-            else:
-                QMessageBox.warning(self, "No Stream URL", f"Station {station_name} has no stream URL.")
+        if station_data and station_data.get("url"):
+            self.show_spinner()
+            self.radio_player.play_station(station_data["url"])
+            self.now_playing_label.setText(f"Now playing: {station_name}")
+            self.highlight_favorite(station_name)
+            self.wait_for_playing()
         else:
-            QMessageBox.warning(self, "Not Found", f"Station {station_name} not found in the main list.")
-        
+            QMessageBox.warning(self, "Station Not Found", f"The station '{station_name}' is not available in this country.")
+
+    def _play_favorite(self, favorite_data):
+        """Directly play the favorite station."""
+        station_name = favorite_data["name"]
+        self._play_favorite_after_switch(favorite_data)
     
     def highlight_station_in_list(self, station_name):
         """Highlight the specified station in the main station list."""
@@ -370,6 +394,13 @@ class RadioWindow(QWidget):
         Uses a background worker to fetch stations so the UI won't freeze.
         If you don't use threading, you can fetch directly (but UI might freeze).
         """
+
+        # Cancel any existing thread
+        if self.fetch_stations_worker and self.fetch_stations_worker.isRunning():
+            self.fetch_stations_worker.quit()
+            self.fetch_stations_worker.wait()
+
+        self.current_station_item = None  # Reset the current station item
         self.station_list.clear()
         self.station_list.addItem("[Loading stations...]")
 
@@ -397,6 +428,13 @@ class RadioWindow(QWidget):
         else:
             # Populate the station list with stations and favorite icons
             self.populate_station_list(self.all_stations)
+
+    def stop_fetch_thread(self):
+        """Stop the current fetch thread if it's running."""
+        if self.fetch_stations_worker and self.fetch_stations_worker.isRunning():
+            self.fetch_stations_worker.stop()
+            self.fetch_stations_worker.quit()
+            self.fetch_stations_worker.wait()
 
     # -------------------- Search / Filter --------------------
     def on_search_text_changed(self, text):
@@ -528,21 +566,23 @@ class RadioWindow(QWidget):
     def unhighlight_previous_station(self):
         """Remove bold formatting from the previously highlighted station."""
         if self.current_station_item:
-            container_widget = self.station_list.itemWidget(self.current_station_item)
-            if container_widget:
-                # Reset the QLabel font in the custom widget
-                station_label = container_widget.findChild(QLabel)
-                if station_label:
-                    font = station_label.font()
-                    font.setBold(False)
-                    station_label.setFont(font)
-                    print(f"Unbolded custom widget: {station_label.text()}")  # Debugging log
-            else:
-                # Handle plain QListWidgetItem
-                font = self.current_station_item.font()
-                font.setBold(False)
-                self.current_station_item.setFont(font)
-                print(f"Unbolded QListWidgetItem: {self.current_station_item.text()}")  # Debugging log
+            # Check if the item still exists in the station_list
+            for i in range(self.station_list.count()):
+                if self.station_list.item(i) == self.current_station_item:
+                    container_widget = self.station_list.itemWidget(self.current_station_item)
+                    if container_widget:
+                        # Reset the QLabel font in the custom widget
+                        station_label = container_widget.findChild(QLabel)
+                        if station_label:
+                            font = station_label.font()
+                            font.setBold(False)
+                            station_label.setFont(font)
+                    else:
+                        # Handle plain QListWidgetItem
+                        font = self.current_station_item.font()
+                        font.setBold(False)
+                        self.current_station_item.setFont(font)
+                    break
 
             # Clear the current station reference
             self.current_station_item = None
