@@ -1,5 +1,6 @@
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
+from PyQt6.QtGui import QIcon
 
 class TitleBar(QWidget):
     """
@@ -31,8 +32,10 @@ class TitleBar(QWidget):
         # Minimize button
         self.min_button = QPushButton()
         self.min_button.setObjectName("MinButton")  # for styling via stylesheet
-        self.min_button.setFixedSize(32, 16)
+        self.min_button.setFixedSize(32, 32)  # Set a square size for proper icon rendering
         self.min_button.setToolTip("Minimize")
+        self.min_button.setIcon(QIcon("assets/minimize_icon.svg"))  # Load the minimize SVG icon
+        self.min_button.setIconSize(QSize(24, 24))  # Adjust the icon size
         self.min_button.clicked.connect(self.on_minimize)
         self.layout.addWidget(self.min_button)
 
@@ -41,6 +44,8 @@ class TitleBar(QWidget):
         self.close_button.setObjectName("CloseButton")
         self.close_button.setFixedSize(32, 32)
         self.close_button.setToolTip("Close")
+        self.close_button.setIcon(QIcon("assets/close_icon.svg"))  # Load the close SVG icon
+        self.close_button.setIconSize(QSize(24, 24))  # Adjust the icon size
         self.close_button.clicked.connect(self.on_close)
         self.layout.addWidget(self.close_button)
 

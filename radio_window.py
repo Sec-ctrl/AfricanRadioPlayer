@@ -372,7 +372,7 @@ class RadioWindow(QWidget):
                 self.favorites_widget.favorites_list.setCurrentRow(i)  # Highlight the station
                 print(f"Highlighted favorite: {favorite_item.text()}")  # Debugging log
                 return
-            
+
     # -------------------- Spinner Controls --------------------
     def show_spinner(self):
         """Show the spinner label while loading or playing."""
@@ -589,3 +589,11 @@ class RadioWindow(QWidget):
 
         # Clear selection in the Favorites List
         self.favorites_widget.favorites_list.clearSelection()
+
+    def show_message(self, title: str, message: str):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setIcon(QMessageBox.Icon.Information)  # Use appropriate icon
+        msg_box.exec()
+     

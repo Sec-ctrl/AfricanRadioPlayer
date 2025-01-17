@@ -71,10 +71,13 @@ def LOAD_STYLESHEET():
                 height: 16px;
             }}
             #MinButton {{
-                background-image: url("{minimize_icon_path}");
+                width: 50px; /* Adjust size */
+                height: 50px;
+                
             }}
             #CloseButton {{
-                background-image: url("{close_icon_path}");
+                width: 50px; /* Adjust size */
+                height: 50px;
             }}
             #MinButton:hover {{
                 background-color: rgba(255, 255, 255, 0.1);
