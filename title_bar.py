@@ -19,11 +19,12 @@ class TitleBar(QWidget):
 
     def init_ui(self):
         self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(20, 0, 0, 0)
+        self.layout.setContentsMargins(10, 5, 10, 5)  # Reduced margins for compactness
         self.setLayout(self.layout)
 
         # Title label
         self.title_label = QLabel("Smooth African Radio Player")
+        self.title_label.setObjectName("TitleLabel")
         self.layout.addWidget(self.title_label)
 
         # Push contents to the right
@@ -32,10 +33,10 @@ class TitleBar(QWidget):
         # Minimize button
         self.min_button = QPushButton()
         self.min_button.setObjectName("MinButton")  # for styling via stylesheet
-        self.min_button.setFixedSize(32, 32)  # Set a square size for proper icon rendering
+        self.min_button.setFixedSize(32, 32)  # Consistent size for all buttons
         self.min_button.setToolTip("Minimize")
-        self.min_button.setIcon(QIcon("assets/minimize_icon.svg"))  # Load the minimize SVG icon
-        self.min_button.setIconSize(QSize(24, 24))  # Adjust the icon size
+        self.min_button.setIcon(QIcon("assets/minimize_icon.svg"))
+        self.min_button.setIconSize(QSize(20, 20))  # Adjusted icon size
         self.min_button.clicked.connect(self.on_minimize)
         self.layout.addWidget(self.min_button)
 
@@ -44,8 +45,8 @@ class TitleBar(QWidget):
         self.close_button.setObjectName("CloseButton")
         self.close_button.setFixedSize(32, 32)
         self.close_button.setToolTip("Close")
-        self.close_button.setIcon(QIcon("assets/close_icon.svg"))  # Load the close SVG icon
-        self.close_button.setIconSize(QSize(24, 24))  # Adjust the icon size
+        self.close_button.setIcon(QIcon("assets/close_icon.svg"))
+        self.close_button.setIconSize(QSize(20, 20))
         self.close_button.clicked.connect(self.on_close)
         self.layout.addWidget(self.close_button)
 

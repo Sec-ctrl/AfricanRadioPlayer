@@ -1,32 +1,21 @@
-import vlc  # for checking player state
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QSize, QRectF
-from PyQt6.QtGui import QFont, QColor, QMovie, QIcon, QRegion, QPainterPath
+import os
+import sys
+import vlc
+from PyQt6.QtCore import Qt, QTimer, QSize, QRectF
+from PyQt6.QtGui import QMovie, QIcon, QRegion, QPainterPath
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QListWidget,
-    QLineEdit,
-    QComboBox,
-    QSlider,
-    QMessageBox,
-    QGraphicsDropShadowEffect,
-    QApplication,
-    QToolButton,
-    QListWidgetItem
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
+    QLineEdit, QComboBox, QSlider, QMessageBox,
+    QApplication, QToolButton, QListWidgetItem
 )
 
 from title_bar import TitleBar
+from specialbuttons import MediaKeyListener
 from favorites import Favorites
 from radio_player import RadioPlayer
-from api import FetchStationsWorker  # If you have a worker thread class here
+from api import FetchStationsWorker
 from constants import AFRICAN_COUNTRIES
-from styles import LOAD_STYLESHEET  # We'll define LOAD_STYLESHEET in styles.py
-
-import os
-import sys
+from styles import LOAD_STYLESHEET
 
 class RadioWindow(QWidget):
     def __init__(self):
@@ -39,7 +28,14 @@ class RadioWindow(QWidget):
         self.apply_rounded_corners()
 
         # Create an instance of the RadioPlayer (the VLC logic part)
-        self.radio_player = RadioPlayer()
+        self.all_stations = []  # Keep track of all stations
+        self.radio_player = RadioPlayer(self.all_stations)
+
+        # Create the MediaKeyListener
+        self.media_key_listener = MediaKeyListener(self.radio_player)
+
+        # Start the MediaKeyListener in a separate thread
+        self.media_key_listener.start()
 
         # Keep track of stations and currently selected item
         self.all_stations = []
@@ -413,20 +409,20 @@ class RadioWindow(QWidget):
         self.fetch_stations_worker.start()
 
     def on_stations_fetched(self, stations):
-        """Called when FetchStationsWorker finishes: update the station list."""
-        self.hide_spinner()  # Hide spinner after fetching
-
-        # Clear the existing station list
-        self.station_list.clear()
+        """
+        Called when FetchStationsWorker finishes: update the station list.
+        """
+        self.hide_spinner()
 
         # Update the internal list of stations
         self.all_stations = stations or []
 
+        # Update the RadioPlayer with the new stations
+        self.radio_player.update_stations(self.all_stations)
+
         if not self.all_stations:
-            # Show a placeholder if no stations are found
             self.station_list.addItem("[No stations found]")
         else:
-            # Populate the station list with stations and favorite icons
             self.populate_station_list(self.all_stations)
 
     def stop_fetch_thread(self):

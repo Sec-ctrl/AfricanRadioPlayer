@@ -28,7 +28,7 @@ class Favorites(QWidget):
         # Favorites label
         self.favorites_label = QLabel("Favorites")
         self.favorites_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.favorites_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        self.favorites_label.setStyleSheet("font-size: 16px; font-weight: bold; background: transparent;")
         self.layout.addWidget(self.favorites_label)
 
         # Favorites list
